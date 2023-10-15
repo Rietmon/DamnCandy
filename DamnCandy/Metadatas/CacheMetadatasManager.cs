@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace DamnCandy.Metadatas;
 
-public static class CacheMetadatasManager
+internal static class CacheMetadatasManager
 {
     private static Dictionary<Guid, CacheMetadata> LoadedMetadatas { get; } = new();
 

@@ -27,14 +27,16 @@ public class CacheOperation
     public Guid Guid { get; private set; }
     
     public CacheMetadata Metadata { get; private set; }
-    
-    public float Progress { get; private set; }
+
+    public float Progress => (float)Stage / 6f;
     
     public CacheOperation Parent { get; }
     
     public CacheOperation[] Children { get; private set; }
     
     public Task HandlerTask { get; private set; }
+    
+    public Exception Exception { get; private set; }
 
     private CancellationTokenSource Source => Parent != null ? Parent.cancellationTokenSource : cancellationTokenSource;
     
@@ -59,7 +61,14 @@ public class CacheOperation
         if (Parent == null)
             cancellationTokenSource = new CancellationTokenSource();
     }
-
+    
+    public void Cancel()
+    {
+        Status = CacheStatus.Cancelled;
+        Stage = CacheOperationStage.Ended;
+        Source.Cancel();
+    }
+    
     internal void Begin()
     {
         Status = CacheStatus.InProgress;
@@ -70,55 +79,29 @@ public class CacheOperation
     {
         try
         {
-            Stage = CacheOperationStage.Downloading;
-            Data = await CacheProvider.ProcessCacheAsync();
+            await ProcessCache();
 
             if (Guid == Guid.Empty)
-            {
-                Stage = CacheOperationStage.CreatingGuid;
-                Guid = CacheProvider.GetGuid();
-            }
+                CreateGuid();
 
             FileSystemUtilities.ValidatePath($"{CacheSettings.CacheDataPath}/{Guid}");
-            
-            Stage = CacheOperationStage.CreatingMetadata;
-            Metadata = new CacheMetadata
-            {
-                Guid = Guid,
-                CacheId = CacheId
-            };
-            Metadata.Save();
 
-            Stage = CacheOperationStage.Saving;
-            await CacheHandler.SaveBytesAsync(Guid, Data);
+            CreateMetadata();
+
+            await SaveBytes();
             
             Metadata.CacheDate = DateTime.UtcNow;
             Metadata.IsValid = true;
             Metadata.Save();
 
             if (CacheProvider.ProcessDependencies)
-            {
-                Stage = CacheOperationStage.ResolvingDependencies;
-                var dependencies = CacheProvider.GetDependencies().ToList();
-                Children = new CacheOperation[dependencies.Count];
-                for (var i = 0; i < dependencies.Count; i++)
-                {
-                    var operation = CacheManager.ProcessDependency(dependencies[i], this);
-                    Children[i] = operation;
-                }
-
-                await Task.WhenAll(Children.Select((o) => o.HandlerTask));
-                
-                Metadata.Dependencies = Children.Select((o) => o.Guid).ToArray();
-                Metadata.IsDependenciesValid = true;
-                Metadata.Save();
-            }
+                await ProcessDependencies();
             
             Status = CacheStatus.Cached;
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            Console.WriteLine(ex);
+            Exception = e;
             Status = CacheStatus.Failed;
         }
 
@@ -126,10 +109,50 @@ public class CacheOperation
         onOperationEnded();
     }
 
-    public void Cancel()
+    private async Task ProcessCache()
     {
-        Status = CacheStatus.Cancelled;
-        Stage = CacheOperationStage.Ended;
-        Source.Cancel();
+        Stage = CacheOperationStage.Downloading;
+        Data = await CacheProvider.ProcessCacheAsync();
+    }
+
+    private void CreateGuid()
+    {
+        Stage = CacheOperationStage.CreatingGuid;
+        Guid = CacheProvider.GetGuid();
+    }
+
+    private void CreateMetadata()
+    {
+        Stage = CacheOperationStage.CreatingMetadata;
+        Metadata = new CacheMetadata
+        {
+            Guid = Guid,
+            CacheId = CacheId
+        };
+        Metadata.Save();
+    }
+
+    private async Task SaveBytes()
+    {
+        Stage = CacheOperationStage.Saving;
+        await CacheHandler.SaveBytesAsync(Guid, Data);
+    }
+
+    private async Task ProcessDependencies()
+    {
+        Stage = CacheOperationStage.ResolvingDependencies;
+        var dependencies = CacheProvider.GetDependencies().ToList();
+        Children = new CacheOperation[dependencies.Count];
+        for (var i = 0; i < dependencies.Count; i++)
+        {
+            var operation = CacheManager.ProcessDependency(dependencies[i], this);
+            Children[i] = operation;
+        }
+
+        await Task.WhenAll(Children.Select((o) => o.HandlerTask));
+                
+        Metadata.Dependencies = Children.Select((o) => o.Guid).ToArray();
+        Metadata.IsDependenciesValid = true;
+        Metadata.Save();
     }
 }

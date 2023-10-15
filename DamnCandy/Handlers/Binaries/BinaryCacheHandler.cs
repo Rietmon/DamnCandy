@@ -1,7 +1,10 @@
-using DamnCandy.Operations;
+namespace DamnCandy.Handlers.Binaries;
 
-namespace DamnCandy.Handlers;
-
+/// <summary>
+/// Binary cache handler.
+/// Can async save and load bytes from file.
+/// Supports only byte[] type to load.
+/// </summary>
 public class BinaryCacheHandler : ICacheHandler
 {
     public string FileExtension { get; }
@@ -16,18 +19,13 @@ public class BinaryCacheHandler : ICacheHandler
         await File.WriteAllBytesAsync(path, bytes);
     }
 
-    public async Task<byte[]> GetBytesAsync(Guid guid)
-    {
-        var path = $"{CacheSettings.CacheDataPath}/{guid}/Data.{FileExtension}";
-        return await File.ReadAllBytesAsync(path);
-    }
-
     public async Task<T> LoadAsync<T>(Guid guid)
     {
         if (typeof(T) != typeof(byte[]))
-            throw new Exception("Get object from binary cache handler is not supported!");
+            throw new Exception($"Provider {GetType()} not supports providing guid before fetch!");
         
-        return (T)(object)await GetBytesAsync(guid);
+        var path = $"{CacheSettings.CacheDataPath}/{guid}/Data.{FileExtension}";
+        return (T)(object)await File.ReadAllBytesAsync(path);
     }
         
 }

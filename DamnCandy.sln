@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DamnCandy", "DamnCandy\DamnCandy.csproj", "{E76DEC35-74C7-4DA9-A5D8-A06D8490E021}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DamnCandy.Example", "DamnCandy.Example\DamnCandy.Example.csproj", "{0FFAF529-2A95-424A-B4D9-320BECC6CCE9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{E76DEC35-74C7-4DA9-A5D8-A06D8490E021}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E76DEC35-74C7-4DA9-A5D8-A06D8490E021}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E76DEC35-74C7-4DA9-A5D8-A06D8490E021}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0FFAF529-2A95-424A-B4D9-320BECC6CCE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FFAF529-2A95-424A-B4D9-320BECC6CCE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FFAF529-2A95-424A-B4D9-320BECC6CCE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FFAF529-2A95-424A-B4D9-320BECC6CCE9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

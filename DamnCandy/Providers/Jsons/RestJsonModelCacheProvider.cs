@@ -5,6 +5,12 @@ using System.Text.Json;
 
 namespace DamnCandy.Providers.Jsons;
 
+/// <summary>
+/// Rest method to get json data from url.
+/// Supports only GET method.
+/// Supports dependencies.
+/// Creates guid from url.
+/// </summary>
 public class RestJsonModelCacheProvider<T> : ICacheProvider where T : new()
 {
     public bool CanProvideGuidBeforeFetch => true;

@@ -2,8 +2,14 @@ using System.Security.Cryptography;
 using System.Text;
 using DamnCandy.Providers.Jsons;
 
-namespace DamnCandy.Providers;
+namespace DamnCandy.Providers.Binaries;
 
+/// <summary>
+/// Rest method to get binary data from url.
+/// Supports only GET method.
+/// Don't supports dependencies.
+/// Creates guid from url.
+/// </summary>
 public class RestBinaryCacheProvider : ICacheProvider
 {
     public bool CanProvideGuidBeforeFetch => true;
@@ -27,8 +33,6 @@ public class RestBinaryCacheProvider : ICacheProvider
         return new Guid(hash);
     }
 
-    public IEnumerable<DependencyData> GetDependencies()
-    {
-        throw new NotImplementedException();
-    }
+    public IEnumerable<DependencyData> GetDependencies() =>
+        throw new Exception("RestBinaryCacheProvider does not support dependencies!");
 }

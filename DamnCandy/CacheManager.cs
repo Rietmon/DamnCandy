@@ -1,7 +1,4 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using DamnCandy.Handlers;
+﻿using DamnCandy.Handlers;
 using DamnCandy.Metadatas;
 using DamnCandy.Operations;
 using DamnCandy.Providers;
@@ -10,10 +7,25 @@ using DamnCandy.Utilities;
 
 namespace DamnCandy;
 
+/// <summary>
+/// Main manager for DamnCandy. Provides API for caching and loading data.
+/// </summary>
 public static class CacheManager
 {
+    /// <summary>
+    /// Operations that are currently running.
+    /// DO NOT REMOVE OR MODIFY ANYTHING FROM THIS LIST!
+    /// READ ONLY!
+    /// </summary>
     public static List<CacheOperation> Operations { get; } = new();
 
+    /// <summary>
+    /// Begin caching operation and return CacheOperation
+    /// </summary>
+    /// <param name="provider">Cache provider, where fetch data, creates guid etc</param>
+    /// <param name="handler">Cache handler, how to write file, read etc</param>
+    /// <param name="cacheId">Additional id. If Guid unable to create until value isn't fetched for Guid will be used this string</param>
+    /// <returns>CacheOperation object which controls your task and provide info and management API</returns>
     public static CacheOperation Cache(ICacheProvider provider, ICacheHandler handler, string cacheId = "")
     {
         var operation = new CacheOperation(cacheId, provider, handler);
@@ -23,6 +35,13 @@ public static class CacheManager
         return operation;
     }
 
+    /// <summary>
+    /// Load value from cache
+    /// </summary>
+    /// <param name="guid">Guid of cache</param>
+    /// <param name="handler">Cache handler, how to write file, read etc</param>
+    /// <typeparam name="T">Target cache value type</typeparam>
+    /// <returns>Container with Metadata and target value</returns>
     public static async Task<CacheContainer<T>> LoadAsync<T>(Guid guid, ICacheHandler handler)
     {
         var metadata = CacheMetadatasManager.Load(guid);
@@ -33,29 +52,91 @@ public static class CacheManager
         return new CacheContainer<T>(metadata, value);
     }
 
+    /// <summary>
+    /// Load value from cache
+    /// </summary>
+    /// <param name="cacheId">CacheId of cache</param>
+    /// <param name="handler">Cache handler, how to write file, read etc</param>
+    /// <typeparam name="T">Target cache value type</typeparam>
+    /// <returns>Container with Metadata and target value</returns>
     public static async Task<CacheContainer<T>> LoadAsync<T>(string cacheId, ICacheHandler handler) =>
         await LoadAsync<T>(cacheId.CreateGuid(), handler);
 
+    /// <summary>
+    /// Returns true if guid there is in cache
+    /// </summary>
+    /// <param name="guid">Guid of cache</param>
+    /// <returns>True if cached</returns>
     public static bool IsCached(Guid guid) => CacheMetadatasManager.HasMetadata(guid);
+    
+    /// <summary>
+    /// Returns true if guid there is in cache
+    /// </summary>
+    /// <param name="provider">Cache provider, where fetch data, creates guid etc</param>
+    /// <returns>True if cached</returns>
     public static bool IsCached(ICacheProvider provider) => provider.CanProvideGuidBeforeFetch 
         ? IsCached(provider.GetGuid())
         : throw new Exception($"Provider {provider.GetType()} not supports providing guid before fetch!");
+    
+    /// <summary>
+    /// Returns true if guid there is in cache
+    /// </summary>
+    /// <param name="cacheId">CacheId of cache</param>
+    /// <returns>True if cached</returns>
     public static bool IsCached(string cacheId) => IsCached(cacheId.CreateGuid());
     
+    /// <summary>
+    /// Returns CacheOperation by guid if it's running now
+    /// </summary>
+    /// <param name="guid">Guid of cache</param>
+    /// <returns>CacheOperation</returns>
     public static CacheOperation GetOperation(Guid guid) => Operations.FirstOrDefault((operation) 
         => operation.Guid == guid);
+    
+    /// <summary>
+    /// Returns CacheOperation by guid if it's running now
+    /// </summary>
+    /// <param name="provider">Cache provider, where fetch data, creates guid etc</param>
+    /// <returns>CacheOperation</returns>
     public static CacheOperation GetOperation(ICacheProvider provider) => provider.CanProvideGuidBeforeFetch 
         ? GetOperation(provider.GetGuid())
         : throw new Exception($"Provider {provider.GetType()} not supports providing guid before fetch!");
+    
+    /// <summary>
+    /// Returns CacheOperation by guid if it's running now
+    /// </summary>
+    /// <param name="cacheId">CacheId of cache</param>
+    /// <returns>CacheOperation</returns>
     public static CacheOperation GetOperation(string cacheId) => Operations.FirstOrDefault((operation) 
         => operation.CacheId == cacheId);
 
+    /// <summary>
+    /// Returns true if there is running operation with provided argument
+    /// </summary>
+    /// <param name="guid">Guid of cache</param>
+    /// <returns>True if there is operation</returns>
     public static bool IsCaching(Guid guid) => Operations.Exists((operation) => operation.Guid == guid);
+    
+    /// <summary>
+    /// Returns true if there is running operation with provided argument
+    /// </summary>
+    /// <param name="provider">Cache provider, where fetch data, creates guid etc</param>
+    /// <returns>True if there is operation</returns>
     public static bool IsCaching(ICacheProvider provider) => provider.CanProvideGuidBeforeFetch 
         ? IsCaching(provider.GetGuid())
         : throw new Exception($"Provider {provider.GetType()} not supports providing guid before fetch!");
+    
+    /// <summary>
+    /// Returns true if there is running operation with provided argument
+    /// </summary>
+    /// <param name="cacheId">CacheId of cache</param>
+    /// <returns>True if there is operation</returns>
     public static bool IsCaching(string cacheId) => Operations.Exists((operation) => operation.CacheId == cacheId);
 
+    /// <summary>
+    /// Delete cache from memory and kill operation if it's running
+    /// </summary>
+    /// <param name="guid">Guid of cache</param>
     public static void Delete(Guid guid)
     {
         if (guid == Guid.Empty)

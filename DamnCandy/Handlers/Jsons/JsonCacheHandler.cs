@@ -1,7 +1,11 @@
 using System.Text.Json;
 
-namespace DamnCandy.Handlers;
+namespace DamnCandy.Handlers.Jsons;
 
+/// <summary>
+/// Json cache handler.
+/// Can async save and load json string from file.
+/// </summary>
 public class JsonCacheHandler : ICacheHandler
 {
     public async Task SaveBytesAsync(Guid guid, byte[] bytes)
