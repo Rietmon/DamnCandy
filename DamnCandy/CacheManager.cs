@@ -19,6 +19,8 @@ public static class CacheManager
     /// </summary>
     public static List<CacheOperation> Operations { get; } = new();
 
+    private static object LockObject { get; } = new();
+
     /// <summary>
     /// Begin caching operation and return CacheOperation
     /// </summary>
@@ -44,6 +46,28 @@ public static class CacheManager
     /// <returns>Container with Metadata and target value</returns>
     public static async Task<CacheContainer<T>> LoadAsync<T>(Guid guid, ICacheHandler handler)
     {
+        var metadata = CacheMetadatasManager.Load(guid);
+        if (metadata == null)
+            return null;
+
+        var value = await handler.LoadAsync<T>(guid);
+        return new CacheContainer<T>(metadata, value);
+    }
+
+    /// <summary>
+    /// Load value from cache
+    /// </summary>
+    /// <param name="guid">Guid of cache</param>
+    /// <param name="handler">Cache handler, how to write file, read etc</param>
+    /// <typeparam name="T">Target cache value type</typeparam>
+    /// <returns>Container with Metadata and target value</returns>
+    public static async Task<CacheContainer<T>> LoadAsync<T>(ICacheProvider provider, ICacheHandler handler)
+    {
+        if (!provider.CanProvideGuidBeforeFetch)
+            throw new Exception($"Provider {provider.GetType()} not supports providing guid before fetch!");
+        
+        var guid = provider.GetGuid();
+        
         var metadata = CacheMetadatasManager.Load(guid);
         if (metadata == null)
             return null;
@@ -183,9 +207,12 @@ public static class CacheManager
 
     private static void OnOperationEnded(CacheOperation operation)
     {
-        Operations.Remove(operation);
+        lock (LockObject)
+        {
+            Operations.Remove(operation);
 
-        if (operation.Status is CacheStatus.Failed or CacheStatus.Cancelled)
-            Delete(operation.Guid);
+            if (operation.Status is CacheStatus.Failed or CacheStatus.Cancelled)
+                Delete(operation.Guid);
+        }
     }
 }
