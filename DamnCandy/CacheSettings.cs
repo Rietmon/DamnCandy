@@ -8,17 +8,17 @@ namespace DamnCandy
 {
     public static class CacheSettings
     {
-        #if UNITY_5_3_OR_NEWER
+#if UNITY_5_3_OR_NEWER
         /// <summary>
         /// Root directory of application data (default: Application.persistentDataPath
         /// </summary>
         public static string RootPath { get; set; } = Application.persistentDataPath;
-        #else
+#else
         /// <summary>
         /// Root directory of application data (default: Environment.CurrentDirectory)
         /// </summary>
         public static string RootPath { get; set; } = Environment.CurrentDirectory;
-        #endif
+#endif
     
         /// <summary>
         /// Subdirectory of RootPath where cache data will be stored (default: "__CacheData")
