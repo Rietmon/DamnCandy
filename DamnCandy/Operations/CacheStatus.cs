@@ -1,10 +1,11 @@
-namespace DamnCandy.Operations;
-
-public enum CacheStatus
+namespace DamnCandy.Operations
 {
-    NotCached,
-    InProgress,
-    Cached,
-    Failed,
-    Cancelled
+    public enum CacheStatus
+    {
+        NotCached,
+        InProgress,
+        Cached,
+        Failed,
+        Cancelled
+    }
 }

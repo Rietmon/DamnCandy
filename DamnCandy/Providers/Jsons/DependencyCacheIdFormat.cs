@@ -1,9 +1,10 @@
-namespace DamnCandy.Providers.Jsons;
-
-public enum DependencyCacheIdFormat
+namespace DamnCandy.Providers.Jsons
 {
-    FromValue,
-    FromParentAndName,
-    FromParentGuidAndName,
-    DontCreate
+    public enum DependencyCacheIdFormat
+    {
+        FromValue,
+        FromParentAndName,
+        FromParentGuidAndName,
+        DontCreate
+    }
 }

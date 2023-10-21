@@ -1,39 +1,42 @@
-namespace DamnCandy.Utilities;
+using System.IO;
 
-internal static class FileSystemUtilities
+namespace DamnCandy.Utilities
 {
-    public static void ValidatePath(string path)
+    internal static class FileSystemUtilities
     {
-        if (Path.HasExtension(path))
-            path = Path.GetDirectoryName(path);
+        public static void ValidatePath(string path)
+        {
+            if (Path.HasExtension(path))
+                path = Path.GetDirectoryName(path);
             
-        void CheckDirectory(string p)
-        {
-            if (Directory.Exists(p)) return;
+            void CheckDirectory(string p)
+            {
+                if (Directory.Exists(p)) return;
 
-            CheckDirectory(Directory.GetDirectoryRoot(p));
-            Directory.CreateDirectory(p);
+                CheckDirectory(Directory.GetDirectoryRoot(p));
+                Directory.CreateDirectory(p);
+            }
+
+            CheckDirectory(path);
         }
-
-        CheckDirectory(path);
-    }
     
-    public static void ForceDeleteDirectory(string target)
-    {
-        var files = Directory.GetFiles(target);
-        var directories = Directory.GetDirectories(target);
-
-        foreach (var file in files)
+        public static void ForceDeleteDirectory(string target)
         {
-            File.SetAttributes(file, FileAttributes.Normal);
-            File.Delete(file);
-        }
+            var files = Directory.GetFiles(target);
+            var directories = Directory.GetDirectories(target);
 
-        foreach (var directory in directories)
-        {
-            ForceDeleteDirectory(directory);
-        }
+            foreach (var file in files)
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
+                File.Delete(file);
+            }
 
-        Directory.Delete(target, false);
+            foreach (var directory in directories)
+            {
+                ForceDeleteDirectory(directory);
+            }
+
+            Directory.Delete(target, false);
+        }
     }
 }
